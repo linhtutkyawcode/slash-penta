@@ -30,8 +30,10 @@ const LoginButton = () => {
       userDataString != 'null' &&
       userDataString != 'false' &&
       JSON.parse(userDataString);
-    if (userData?.expTime <= Date.now()) localStorage.removeItem('userData');
-    else if (userData?.isAuthenticated) userStore.set(userData);
+    if (userData?.expTime <= Date.now()) {
+      localStorage.removeItem('courseData');
+      localStorage.removeItem('userData');
+    } else if (userData?.isAuthenticated) userStore.set(userData);
   }, []);
 
   useEffect(() => {
@@ -40,6 +42,7 @@ const LoginButton = () => {
 
     if (isAuthenticated) {
       const expTime = Date.now() + 1000 * 60 * 60 * 24 * 3;
+      localStorage.removeItem('courseData');
       localStorage.setItem(
         'userData',
         JSON.stringify({ error, isLoading, isAuthenticated, user, expTime })
@@ -93,6 +96,7 @@ const LogoutButton = forwardRef<MenuItemProps>(() => {
   return (
     <MenuItem
       onClick={() => {
+        localStorage.removeItem('courseData');
         localStorage.removeItem('userData');
         logout({ returnTo: window.location.origin });
       }}
@@ -306,7 +310,7 @@ export default function Header() {
         }
         redirectUri={window.location.origin}
       >
-        <div className="pt-[5.4rem]"></div>
+        <div className="pt-[4.9rem] lg:pt-[5.4rem]"></div>
         <div className="fixed w-full p-1.5 top-0 z-50">
           <Navbar className="mx-auto max-w-screen-xl py-2 px-4 lg:px-8 lg:py-4">
             <div className="container mx-auto flex items-center justify-between text-blue-gray-900">
