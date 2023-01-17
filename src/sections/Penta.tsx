@@ -1,176 +1,173 @@
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Typography,
-  Button,
-} from '@material-tailwind/react';
+import { Button, Avatar } from '@material-tailwind/react';
+import { useStore } from '@nanostores/react';
+import { useEffect, useState } from 'react';
+import { userStore } from '../stores';
+import { Configuration, OpenAIApi } from 'openai';
+
+const configuration = new Configuration({
+  apiKey:
+    import.meta.env.PUBLIC_OPENAI_API_KEY || process.env.PUBLIC_OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
 
 export default function Penta() {
-  return (
-    // <!-- component -->
-    <div className="flex h-[calc(100vh-5.4rem)] container max-w-screen-xl antialiased text-gray-800 p-0 py-2">
-      <div className="flex flex-row h-full w-full overflow-x-hidden p-0">
-        <div className="flex flex-col flex-auto h-full p-0">
-          <div className="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-white h-full p-4">
-            <div className="flex flex-col h-full overflow-x-auto mb-4">
-              <div className="flex flex-col h-full">
-                <div className="grid grid-cols-12 gap-y-2">
-                  <div className="col-start-1 col-end-8 p-3 rounded-lg">
-                    <div className="flex flex-row items-center">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full text-white bg-indigo-400 flex-shrink-0">
-                        PT
-                      </div>
-                      <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                        <div>Hey How are you today?</div>
-                      </div>
-                    </div>
+  const $userData = useStore(userStore);
+  const [courseData, setCourseData] = useState<string>('');
+  const [input, setInput] = useState<string>('');
+
+  const generatePrompt = (
+    n: {
+      text: string;
+      type: '/p' | '/u';
+    },
+    o?: string
+  ) => {
+    const initialPrompt =
+      'This is a conversation with an AI called "Slash Penta" or "/p" created by the "Slash team". "/Penta" is trying to teach the user how to use git. "/p" give the key steps to learn git and will explain each step in detail with example if the user is interested. "/p" explain a step and wait for the user\'s response before explaining next step.\n';
+    return (o || initialPrompt) + n.type + ':' + n.text + '\n';
+  };
+
+  const promptToUI = (text: string) => {
+    return text
+      .slice(text.indexOf('\n') + 4)
+      .split('/p:')
+      .map((msg, index) => {
+        if (msg.includes('/u:'))
+          return [
+            <div
+              key={'/p' + index + ':'}
+              className="col-start-1 col-end-8 p-3 rounded-lg"
+            >
+              <div className="flex flex-row items-center">
+                <Button
+                  variant="text"
+                  color="indigo"
+                  className="p-1.5 rounded-full"
+                >
+                  <div className="ring-2 ring-offset-2 ring-indigo-400 flex items-center justify-center h-8 w-8 font-semibold rounded-full bg-indigo-400 flex-shrink-0 text-white">
+                    /P
                   </div>
-                  <div className="col-start-1 col-end-8 p-3 rounded-lg">
-                    <div className="flex flex-row items-center">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-400 flex-shrink-0">
-                        A
-                      </div>
-                      <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                        <div>
-                          Lorem ipsum dolor sit amet, consectetur adipisicing
-                          elit. Vel ipsa commodi illum saepe numquam maxime
-                          asperiores voluptate sit, minima perspiciatis.
-                        </div>
-                      </div>
-                    </div>
+                </Button>
+                <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
+                  <div>{msg.slice(0, msg.indexOf('/u:'))}</div>
+                </div>
+              </div>
+            </div>,
+            <div
+              key={'/u' + index + ':'}
+              className="col-start-6 col-end-13 p-3 rounded-lg"
+            >
+              <div className="flex items-center justify-start flex-row-reverse">
+                <Button
+                  variant="text"
+                  color="indigo"
+                  className="p-1.5 rounded-full"
+                >
+                  <Avatar
+                    src={$userData?.user?.picture}
+                    alt={$userData?.user?.name}
+                    variant="circular"
+                    className="ring-2 ring-offset-2 ring-indigo-400 w-8 h-8"
+                  />
+                </Button>
+                <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
+                  <div>{msg.slice(msg.indexOf('/u:') + 3)}</div>
+                </div>
+              </div>
+            </div>,
+          ];
+        else
+          return (
+            <div
+              key={'/p' + index + ':'}
+              className="col-start-1 col-end-8 p-3 rounded-lg"
+            >
+              <div className="flex flex-row items-center">
+                <Button
+                  variant="text"
+                  color="indigo"
+                  className="p-1.5 rounded-full"
+                >
+                  <div className="ring-2 ring-offset-2 ring-indigo-400 flex items-center justify-center h-8 w-8 font-semibold rounded-full bg-indigo-400 flex-shrink-0 text-white">
+                    /P
                   </div>
-                  <div className="col-start-6 col-end-13 p-3 rounded-lg">
-                    <div className="flex items-center justify-start flex-row-reverse">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-400 flex-shrink-0">
-                        A
-                      </div>
-                      <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
-                        <div>I'm ok what about you?</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-start-6 col-end-13 p-3 rounded-lg">
-                    <div className="flex items-center justify-start flex-row-reverse">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-400 flex-shrink-0">
-                        A
-                      </div>
-                      <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
-                        <div>
-                          Lorem ipsum dolor sit, amet consectetur adipisicing. ?
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-start-1 col-end-8 p-3 rounded-lg">
-                    <div className="flex flex-row items-center">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-400 flex-shrink-0">
-                        A
-                      </div>
-                      <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                        <div>Lorem ipsum dolor sit amet !</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-start-6 col-end-13 p-3 rounded-lg">
-                    <div className="flex items-center justify-start flex-row-reverse">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-400 flex-shrink-0">
-                        A
-                      </div>
-                      <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
-                        <div>
-                          Lorem ipsum dolor sit, amet consectetur adipisicing. ?
-                        </div>
-                        <div className="absolute text-xs bottom-0 right-0 -mb-5 mr-2 text-gray-500">
-                          Seen
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-start-1 col-end-8 p-3 rounded-lg">
-                    <div className="flex flex-row items-center">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-400 flex-shrink-0">
-                        A
-                      </div>
-                      <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                        <div>
-                          Lorem ipsum dolor sit amet consectetur adipisicing
-                          elit. Perspiciatis, in.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-start-1 col-end-8 p-3 rounded-lg">
-                    <div className="flex flex-row items-center">
-                      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-400 flex-shrink-0">
-                        A
-                      </div>
-                      <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                        <div className="flex flex-row items-center">
-                          <button className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-800 rounded-full h-8 w-10">
-                            <svg
-                              className="w-6 h-6 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.5"
-                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                              ></path>
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.5"
-                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                              ></path>
-                            </svg>
-                          </button>
-                          <div className="flex flex-row items-center space-x-px ml-4">
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-4 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-8 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-8 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-10 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-10 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-12 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-10 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-6 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-5 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-4 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-3 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-10 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-10 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-8 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-8 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-1 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-1 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-8 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-8 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-2 w-1 bg-gray-500 rounded-lg"></div>
-                            <div className="h-4 w-1 bg-gray-500 rounded-lg"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                </Button>
+                <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
+                  <div>{msg}</div>
                 </div>
               </div>
             </div>
-            <div className="flex flex-row items-center h-16 rounded-xl bg-gray-300 w-full px-4">
+          );
+      });
+  };
+
+  const hitOpenAIapi = async (prompt: string) => {
+    const completion = await openai.createCompletion({
+      model: 'text-davinci-003',
+      prompt,
+      temperature: 0.8,
+      max_tokens: 1500,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0.6,
+    });
+
+    // Components that are build-time rendered also log to the CLI.
+    // When rendered with a client:* directive, they also log to the browser console.
+
+    const a = completion.data.choices[0].text
+      ?.trim()
+      .slice(completion.data.choices[0].text?.trim().lastIndexOf('/p:') + 3);
+    console.log(a);
+
+    setCourseData(
+      generatePrompt(
+        {
+          text: a || '/Penta sadly encountered an error.',
+          type: '/p',
+        },
+        prompt
+      )
+    );
+  };
+  // ? local storage
+  useEffect(() => {
+    const courseData = localStorage.getItem('courseData');
+    if (courseData) setCourseData(courseData);
+    else
+      setCourseData(
+        generatePrompt(
+          {
+            text: "I'm here to teach you git.",
+            type: '/p',
+          },
+          generatePrompt({
+            text: 'This is me "/Penta".',
+            type: '/p',
+          })
+        )
+      );
+  }, []);
+
+  useEffect(() => {
+    if (courseData) localStorage.setItem('courseData', courseData);
+  }, [courseData]);
+
+  return (
+    // <!-- component -->
+    <div className="flex h-[calc(100vh-5.4rem)] container max-w-screen-xl antialiased text-gray-800 p-0 px-2 lg:pt-2">
+      <div className="flex flex-row h-full w-full overflow-x-hidden p-0">
+        <div className="flex flex-col flex-auto h-full p-0">
+          <div className="flex flex-col flex-auto flex-shrink-0 rounded-2xl bg-white h-full p-4 m-0 rounded-b-none">
+            <div className="flex flex-col h-full overflow-x-auto mb-4">
+              <div className="flex flex-col h-full">
+                <div className="grid grid-cols-12 gap-y-2">
+                  {promptToUI(courseData)}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-row items-center h-16 rounded-xl bg-indigo-300/20 w-full px-4">
               <div>
                 <button className="flex items-center justify-center text-gray-400 hover:text-gray-600">
                   <svg
@@ -193,6 +190,8 @@ export default function Penta() {
                 <div className="relative w-full">
                   <input
                     type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
                     className="flex w-full border rounded-xl focus:outline-none focus:border-indigo-300 pl-4 h-10"
                   />
                   <button className="absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600">
@@ -214,7 +213,20 @@ export default function Penta() {
                 </div>
               </div>
               <div className="ml-4">
-                <button className="flex items-center justify-center bg-indigo-400 hover:bg-indigo-600 rounded-xl text-white px-4 py-1 flex-shrink-0">
+                <button
+                  onClick={() => {
+                    const prompt = generatePrompt(
+                      { text: input, type: '/u' },
+                      courseData
+                    );
+                    console.log(prompt);
+
+                    setCourseData(prompt);
+                    hitOpenAIapi(prompt);
+                    setInput('');
+                  }}
+                  className="flex items-center justify-center bg-indigo-400 hover:bg-indigo-600 rounded-xl text-white px-4 py-1 flex-shrink-0"
+                >
                   <span>Send</span>
                   <span className="ml-2">
                     <svg
