@@ -23,14 +23,26 @@ export default function Penta() {
     },
     o?: string
   ) => {
-    const initialPrompt =
-      'This is a conversation with an AI called "Slash Penta" or "/p" created by the "Slash team". "/Penta" is trying to teach the user how to use git. "/p" give the key steps to learn git and will explain each step in detail with example if the user is interested. "/p" explain a step and wait for the user\'s response before explaining next step.\n';
+    const initialPrompt = `This is a conversation with an AI called Slash Penta or "/p" created by the Slash Team powered by OpenAI.
+      In 2022, the Slash Team is founded by Lin Htuyt Kyaw, a web developer from Padaung, Bago, Myanmar.
+      The Slash Team is a growing community but it's critically low on resource.
+      In this demo "/Penta" is a helpful ai assistant trying to teach the user how to use git only.
+      "/Penta" won't teach user other topic rather than git.
+      "/Penta" give the key steps to learn git and will explain each step in detail with example if the user is interested.
+      The key steps are : 
+        installation,
+        making sure git is working, 
+        demonstrating important basic commands and concepts each with step by step guides,
+        advance usage and flow,
+        congratulation for completing the git journey;
+      "/Penta" explain a step line by line waiting for the user's response before explaining next step.
+      Following is a sample conversation;`;
     return (o || initialPrompt) + n.type + ':' + n.text + '\n';
   };
 
   const promptToUI = (text: string) => {
     return text
-      .slice(text.indexOf('\n') + 4)
+      .slice(text.indexOf('Following is a sample conversation;') + 38)
       .split('/p:')
       .map((msg, index) => {
         if (msg.includes('/u:'))
@@ -107,7 +119,7 @@ export default function Penta() {
       model: 'text-davinci-003',
       prompt,
       temperature: 0.8,
-      max_tokens: 1500,
+      max_tokens: 2500,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0.6,
@@ -116,15 +128,15 @@ export default function Penta() {
     // Components that are build-time rendered also log to the CLI.
     // When rendered with a client:* directive, they also log to the browser console.
 
-    const a = completion.data.choices[0].text
-      ?.trim()
-      .slice(completion.data.choices[0].text?.trim().lastIndexOf('/p:') + 3);
-    console.log(a);
-
     setCourseData(
       generatePrompt(
         {
-          text: a || '/Penta sadly encountered an error.',
+          text:
+            completion.data.choices[0].text
+              ?.trim()
+              .slice(
+                completion.data.choices[0].text?.trim().lastIndexOf('/p:') + 3
+              ) || '/Penta sadly encountered an error.',
           type: '/p',
         },
         prompt
@@ -139,11 +151,11 @@ export default function Penta() {
       setCourseData(
         generatePrompt(
           {
-            text: "I'm here to teach you git.",
+            text: "I'm here to help you learn how to use git.",
             type: '/p',
           },
           generatePrompt({
-            text: 'This is me "/Penta".',
+            text: 'Hi, I am "/Penta", your personal AI teacher.',
             type: '/p',
           })
         )
@@ -192,6 +204,17 @@ export default function Penta() {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
+                    onKeyUp={(e) => {
+                      if (e.key === 'Enter') {
+                        const prompt = generatePrompt(
+                          { text: input, type: '/u' },
+                          courseData
+                        );
+                        setCourseData(prompt);
+                        hitOpenAIapi(prompt);
+                        setInput('');
+                      }
+                    }}
                     className="flex w-full border rounded-xl focus:outline-none focus:border-indigo-300 pl-4 h-10"
                   />
                   <button className="absolute flex items-center justify-center h-full w-12 right-0 top-0 text-gray-400 hover:text-gray-600">
@@ -219,7 +242,6 @@ export default function Penta() {
                       { text: input, type: '/u' },
                       courseData
                     );
-                    console.log(prompt);
 
                     setCourseData(prompt);
                     hitOpenAIapi(prompt);
