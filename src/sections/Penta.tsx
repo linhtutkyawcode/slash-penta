@@ -2,6 +2,14 @@ import { Button, Avatar } from '@material-tailwind/react';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
 import { userStore } from '../stores';
+import { Configuration, OpenAIApi } from 'openai';
+
+const configuration = new Configuration({
+  apiKey:
+    import.meta.env.PUBLIC_OPENAI_API_KEY || process.env.PUBLIC_OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
 
 export default function Penta() {
   const $userData = useStore(userStore);
@@ -16,63 +24,113 @@ export default function Penta() {
     o?: string
   ) => {
     const initialPrompt =
-      'This is a conversation woth an AI called "Slash Penta".\n';
+      'This is a conversation with an AI called "Slash Penta" or "/p" created by the "Slash team". "/Penta" is trying to teach the user how to use git. "/p" give the key steps to learn git and will explain each step in detail with example if the user is interested. "/p" explain a step and wait for the user\'s response before explaining next step.\n';
     return (o || initialPrompt) + n.type + ':' + n.text + '\n';
   };
 
   const promptToUI = (text: string) => {
-    return text.split('\n').map((msg, index) => {
-      if (msg.startsWith('/p:'))
-        return (
-          <div
-            key={'/' + index + ':'}
-            className="col-start-1 col-end-8 p-3 rounded-lg"
-          >
-            <div className="flex flex-row items-center">
-              <Button
-                variant="text"
-                color="indigo"
-                className="p-1.5 rounded-full"
-              >
-                <div className="ring-2 ring-offset-2 ring-indigo-400 flex items-center justify-center h-8 w-8 font-semibold rounded-full bg-indigo-400 flex-shrink-0 text-white">
-                  /P
+    return text
+      .slice(text.indexOf('\n') + 4)
+      .split('/p:')
+      .map((msg, index) => {
+        if (msg.includes('/u:'))
+          return [
+            <div
+              key={'/p' + index + ':'}
+              className="col-start-1 col-end-8 p-3 rounded-lg"
+            >
+              <div className="flex flex-row items-center">
+                <Button
+                  variant="text"
+                  color="indigo"
+                  className="p-1.5 rounded-full"
+                >
+                  <div className="ring-2 ring-offset-2 ring-indigo-400 flex items-center justify-center h-8 w-8 font-semibold rounded-full bg-indigo-400 flex-shrink-0 text-white">
+                    /P
+                  </div>
+                </Button>
+                <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
+                  <div>{msg.slice(0, msg.indexOf('/u:'))}</div>
                 </div>
-              </Button>
-              <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                <div>{msg.slice(3)}</div>
+              </div>
+            </div>,
+            <div
+              key={'/u' + index + ':'}
+              className="col-start-6 col-end-13 p-3 rounded-lg"
+            >
+              <div className="flex items-center justify-start flex-row-reverse">
+                <Button
+                  variant="text"
+                  color="indigo"
+                  className="p-1.5 rounded-full"
+                >
+                  <Avatar
+                    src={$userData?.user?.picture}
+                    alt={$userData?.user?.name}
+                    variant="circular"
+                    className="ring-2 ring-offset-2 ring-indigo-400 w-8 h-8"
+                  />
+                </Button>
+                <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
+                  <div>{msg.slice(msg.indexOf('/u:') + 3)}</div>
+                </div>
+              </div>
+            </div>,
+          ];
+        else
+          return (
+            <div
+              key={'/p' + index + ':'}
+              className="col-start-1 col-end-8 p-3 rounded-lg"
+            >
+              <div className="flex flex-row items-center">
+                <Button
+                  variant="text"
+                  color="indigo"
+                  className="p-1.5 rounded-full"
+                >
+                  <div className="ring-2 ring-offset-2 ring-indigo-400 flex items-center justify-center h-8 w-8 font-semibold rounded-full bg-indigo-400 flex-shrink-0 text-white">
+                    /P
+                  </div>
+                </Button>
+                <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
+                  <div>{msg}</div>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      else if (msg.startsWith('/u:'))
-        return (
-          <div
-            key={'/' + index + ':'}
-            className="col-start-6 col-end-13 p-3 rounded-lg"
-          >
-            <div className="flex items-center justify-start flex-row-reverse">
-              <Button
-                variant="text"
-                color="indigo"
-                className="p-1.5 rounded-full"
-              >
-                <Avatar
-                  src={$userData?.user?.picture}
-                  alt={$userData?.user?.name}
-                  variant="circular"
-                  className="ring-2 ring-offset-2 ring-indigo-400 w-8 h-8"
-                />
-              </Button>
-              <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
-                <div>{msg.slice(3)}</div>
-              </div>
-            </div>
-          </div>
-        );
-      else return;
-    });
+          );
+      });
   };
 
+  const hitOpenAIapi = async (prompt: string) => {
+    const completion = await openai.createCompletion({
+      model: 'text-davinci-003',
+      prompt,
+      temperature: 0.8,
+      max_tokens: 1500,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0.6,
+    });
+
+    // Components that are build-time rendered also log to the CLI.
+    // When rendered with a client:* directive, they also log to the browser console.
+
+    const a = completion.data.choices[0].text
+      ?.trim()
+      .slice(completion.data.choices[0].text?.trim().lastIndexOf('/p:') + 3);
+    console.log(a);
+
+    setCourseData(
+      generatePrompt(
+        {
+          text: a || '/Penta sadly encountered an error.',
+          type: '/p',
+        },
+        prompt
+      )
+    );
+  };
   // ? local storage
   useEffect(() => {
     const courseData = localStorage.getItem('courseData');
@@ -105,41 +163,6 @@ export default function Penta() {
             <div className="flex flex-col h-full overflow-x-auto mb-4">
               <div className="flex flex-col h-full">
                 <div className="grid grid-cols-12 gap-y-2">
-                  {/* <div className="col-start-1 col-end-8 p-3 rounded-lg">
-                    <div className="flex flex-row items-center">
-                      <Button
-                        variant="text"
-                        color="indigo"
-                        className="p-1.5 rounded-full"
-                      >
-                        <div className="ring-2 ring-offset-2 ring-indigo-400 flex items-center justify-center h-8 w-8 font-semibold rounded-full bg-indigo-400 flex-shrink-0 text-white">
-                          /P
-                        </div>
-                      </Button>
-                      <div className="relative ml-3 text-sm bg-white py-2 px-4 shadow rounded-xl">
-                        <div>{courseData}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-start-6 col-end-13 p-3 rounded-lg">
-                    <div className="flex items-center justify-start flex-row-reverse">
-                      <Button
-                        variant="text"
-                        color="indigo"
-                        className="p-1.5 rounded-full"
-                      >
-                        <Avatar
-                          src={$userData?.user?.picture}
-                          alt={$userData?.user?.name}
-                          variant="circular"
-                          className="ring-2 ring-offset-2 ring-indigo-400 w-8 h-8"
-                        />
-                      </Button>
-                      <div className="relative mr-3 text-sm bg-indigo-100 py-2 px-4 shadow rounded-xl">
-                        <div>I'm ok what about you?</div>
-                      </div>
-                    </div>
-                  </div> */}
                   {promptToUI(courseData)}
                 </div>
               </div>
@@ -191,11 +214,17 @@ export default function Penta() {
               </div>
               <div className="ml-4">
                 <button
-                  onClick={() =>
-                    setCourseData(
-                      generatePrompt({ text: input, type: '/u' }, courseData)
-                    )
-                  }
+                  onClick={() => {
+                    const prompt = generatePrompt(
+                      { text: input, type: '/u' },
+                      courseData
+                    );
+                    console.log(prompt);
+
+                    setCourseData(prompt);
+                    hitOpenAIapi(prompt);
+                    setInput('');
+                  }}
                   className="flex items-center justify-center bg-indigo-400 hover:bg-indigo-600 rounded-xl text-white px-4 py-1 flex-shrink-0"
                 >
                   <span>Send</span>
