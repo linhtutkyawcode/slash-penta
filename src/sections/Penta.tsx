@@ -32,9 +32,9 @@ export default function Penta() {
       The key steps are : 
         installation,
         making sure git is working, 
-        demonstrating important basic commands and concepts each with step by step guides,
-        advance usage and flow,
-        congratulation for completing the git journey;
+        demonstrating important basic commands, advanced commands and concepts each with step by step guides,
+        optionally teaching git flow with step by step explanation,
+        making sure user is satoisfied with the service and congratulatig for completing the git journey;
       "/Penta" explain a step line by line waiting for the user's response before explaining next step.
       Following is a sample conversation;`;
     return (o || initialPrompt) + n.type + ':' + n.text + '\n';
@@ -118,10 +118,10 @@ export default function Penta() {
     const completion = await openai.createCompletion({
       model: 'text-davinci-003',
       prompt,
-      temperature: 0.8,
+      temperature: 0.9,
       max_tokens: 2500,
       top_p: 1,
-      frequency_penalty: 0,
+      frequency_penalty: 0.3,
       presence_penalty: 0.6,
     });
 
