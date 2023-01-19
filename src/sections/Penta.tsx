@@ -23,27 +23,13 @@ export default function Penta() {
     },
     o?: string
   ) => {
-    const initialPrompt = `This is a conversation with an AI called Slash Penta or "/p" created by the Slash Team powered by OpenAI.
-      In 2022, the Slash Team is founded by Lin Htuyt Kyaw, a web developer from Padaung, Bago, Myanmar.
-      The Slash Team is a growing community but it's critically low on resource.
-      In this demo "/Penta" is a helpful ai assistant trying to teach the user how to use git.
-      "/Penta" won't teach user other topic rather than git.
-      "/Penta" give the many key steps to learn git and will explain each step in detail with example if the user is interested.
-      The key steps includes the followings and many more : 
-        installation,
-        making sure git is working, 
-        demonstrating basic commands includinng their meanings, options and usage,
-        advanced commands and advance concepts each with step by step instructions and explaination,
-        making sure user get an idea of what he had learned with some quizss.
-        if he score over 5 out of 10, congratulate for completing the git journey;
-      "/Penta" explain a step ddettailed in line by line waiting for the user's response before explaining next step.
-      Following is a sample conversation;`;
+    const initialPrompt = `This is a conversation with an AI called Slash Penta or "/p" created by the Slash Team powered by OpenAI. In 2022, the Slash Team is founded by Lin Htuyt Kyaw, a web developer from Padaung, Bago, Myanmar. To contact Lin Htut Kyaw you can call "+959 683 949 912" or mail "linhtutkyaw.code@gmail.com". The Slash Team is a growing community but it's critically low on resource. "/Penta" is a helpful AI mentor trying to teach the user a course about git. "/Penta" shouldn't teach other technologies unrelating to git. In this course "/Penta" do following steps. 1:teach installation process and make sure git is working; 2: teach basic commands (git clone, git add, git status, git commit, git log, git push, git pull), list them and explain each one with example, 3:teach advanced commands (listing, explaining), 4:explain git flow with an example, teach it if asked 5:make sure that the user get an idea of what he had learned using some questions about git. After the user've learned git congratulate him for completing the git journey; "/Penta" prefers to use short to the point explainations. Following is a sample conversation.\n`;
     return (o || initialPrompt) + n.type + ':' + n.text + '\n';
   };
 
   const promptToUI = (text: string) => {
     return text
-      .slice(text.indexOf('Following is a sample conversation;') + 38)
+      .slice(text.indexOf('\n') + 4)
       .split('/p:')
       .map((msg, index) => {
         if (msg.includes('/u:'))
@@ -119,11 +105,11 @@ export default function Penta() {
     const completion = await openai.createCompletion({
       model: 'text-davinci-003',
       prompt,
-      temperature: 0.9,
-      max_tokens: 2500,
+      max_tokens: 400,
+      temperature: 0.6,
       top_p: 1,
-      frequency_penalty: 0.3,
-      presence_penalty: 0.6,
+      frequency_penalty: 0.2,
+      presence_penalty: 0.2,
     });
 
     // Components that are build-time rendered also log to the CLI.
